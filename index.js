@@ -89,7 +89,7 @@ dotenv.config(); // Load environment variables
 const app = express();
 
 // **Determine MongoDB URI Based on Environment**
-const NODE_ENV = process.env.NODE_ENV || "development";  // Default to "development"
+const NODE_ENV = process.env.NODE_ENV || "development";  
 const MONGO_URI = NODE_ENV === "production" 
     ? process.env.MONGO_URI_PROD 
     : process.env.MONGO_URI_PROD;
@@ -104,10 +104,8 @@ if (!MONGO_URI) {
 console.log("✅ Using MongoDB URI:", MONGO_URI);
 
 // **Connect to MongoDB**
-mongoose.connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => {
+mongoose.connect(MONGO_URI, { dbName: 'vehiclesDB' })
+.then(() => {
     console.log("✅ Connected to MongoDB successfully!");
 }).catch(err => {
     console.error("❌ MongoDB Connection Error:", err);
