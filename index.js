@@ -7,6 +7,11 @@ dotenv.config();
 
 const app = express();
 
+// // MongoDB Connection
+// const MONGO_URI = process.env.VERCEL_ENV === 'production' 
+//     ? process.env.MONGO_URI_PROD 
+//     : process.env.MONGO_URI_DEV;
+
 // MongoDB Connection
 const MONGO_URI = process.env.VERCEL_ENV === 'production' 
     ? process.env.MONGO_URI_PROD 
@@ -57,10 +62,18 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // Ensure JSON data parsing
 
-// **Routes**
+// // **Routes**
+// app.get("/", (req, res) => {
+//     res.render("index");
+// });
+
+
+
 app.get("/", (req, res) => {
-    res.render("index");
+    res.render("index", { name: null, email: null }); // Default values (no data)
 });
+
+
 
 app.post("/show", async (req, res) => {
     const { name, email } = req.body;
@@ -74,12 +87,17 @@ app.post("/show", async (req, res) => {
 
         const newUser = new Vehicle({ name, email });
         await newUser.save();
-        res.send("✅ Data saved successfully!");
+
+        // Redirect back to the home page with data
+        res.render("index", { name, email });
     } catch (err) {
         console.error("❌ Error saving data:", err);
         res.status(500).send("❌ Error saving data.");
     }
 });
+
+
+
 
 
 
@@ -100,3 +118,7 @@ const PORT = process.env.PORT || 4001;
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+
+// app.listen(4001,()=>{
+//     console.log("APP LISTEN 4001")
+// })
