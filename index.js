@@ -87,6 +87,7 @@ app.get("/", (req, res) => {
 
 
 
+
 app.post("/show", async (req, res) => {
     const { name, email } = req.body;
 
@@ -97,23 +98,57 @@ app.post("/show", async (req, res) => {
             return res.status(400).send("⚠️ Name and email are required!");
         }
 
-        // **Find the existing user by email and update, or insert if not found**
-        const updatedUser = await Vehicle.findOneAndUpdate(
-            { email: email }, // Search by email
-            { name: name },   // Update name
-            { new: true, upsert: true } // Return updated doc & create if missing
+        // **Update or Replace the Previous Data**
+        const updatedData = await Vehicle.findOneAndUpdate(
+            {},  // Empty filter to always update the single record
+            { name: name, email: email }, // Replace with new data
+            { new: true, upsert: true }  // Return updated doc, create if missing
         );
 
-        console.log("✅ Updated User:", updatedUser);
-        
-        // Render the home page with updated data
-        res.render("index", { name: updatedUser.name, email: updatedUser.email });
+        console.log("✅ Database Updated:", updatedData);
+
+        // Render updated data on index.ejs
+        res.render("index", { name: updatedData.name, email: updatedData.email });
 
     } catch (err) {
         console.error("❌ Error updating data:", err);
         res.status(500).send("❌ Error updating data.");
     }
 });
+
+
+
+
+
+
+
+// app.post("/show", async (req, res) => {
+//     const { name, email } = req.body;
+
+//     console.log("📥 Received Data:", req.body); // Debugging
+
+//     try {
+//         if (!name || !email) {
+//             return res.status(400).send("⚠️ Name and email are required!");
+//         }
+
+//         // **Find the existing user by email and update, or insert if not found**
+//         const updatedUser = await Vehicle.findOneAndUpdate(
+//             { email: email }, // Search by email
+//             { name: name },   // Update name
+//             { new: true, upsert: true } // Return updated doc & create if missing
+//         );
+
+//         console.log("✅ Updated User:", updatedUser);
+        
+//         // Render the home page with updated data
+//         res.render("index", { name: updatedUser.name, email: updatedUser.email });
+
+//     } catch (err) {
+//         console.error("❌ Error updating data:", err);
+//         res.status(500).send("❌ Error updating data.");
+//     }
+// });
 
 
 
