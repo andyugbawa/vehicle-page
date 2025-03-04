@@ -2,6 +2,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
 const dotenv = require("dotenv");
+const {storage}= require("./cloudinary")
+const multer =require("multer");
+const upload= multer({storage})
+// const upload= multer({dest:"uploads/"})
 
 dotenv.config(); 
 
@@ -10,12 +14,12 @@ const app = express();
 
 // MongoDB Connection
 
-const MONGO_URI = process.env.VERCEL_ENV === 'production' ? process.env.MONGO_URI_PROD : process.env.MONGO_URI_PROD;
+// const MONGO_URI = process.env.VERCEL_ENV === 'production' ? process.env.MONGO_URI_PROD : process.env.MONGO_URI_PROD;
 
 // MongoDB Connection
-// const MONGO_URI = process.env.VERCEL_ENV === 'production' 
-//     ? process.env.MONGO_URI_PROD 
-//     : process.env.MONGO_URI_DEV;
+const MONGO_URI = process.env.VERCEL_ENV === 'production' 
+    ? process.env.MONGO_URI_PROD 
+    : process.env.MONGO_URI_DEV;
 
 
 
@@ -39,7 +43,13 @@ mongoose.connect(MONGO_URI, { dbName: 'vehiclesDB' })
 
 const VehicleSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true } 
+    email: { type: String, required: true, unique: true } ,
+    images:[
+        {
+            url:String,
+            filename:String
+        }
+    ],
 });
 
 const Vehicle = mongoose.model("Vehicle", VehicleSchema);
@@ -50,26 +60,42 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // Ensure JSON data parsing
 
+
 app.get("/", (req, res) => {
-    res.render("index", { name: null, email: null }); 
+    res.render("index", { name: null, email: null, image: null }); // ✅ Ensure image is always defined
 });
 
-app.post("/show", async (req, res) => {
+
+app.post("/show",upload.single("image"), async (req, res) => {
     const { name, email } = req.body;
     console.log(" Received Data:", req.body); 
     try {
         if (!name || !email) {
             return res.status(400).send(" Name and email are required!");
         }
+
+        const image = req.file ? { url: req.file.path, filename: req.file.filename } : null;
         await mongoose.connection.db.collection("vehicles").drop();
         const updatedUser = await Vehicle.findOneAndUpdate(
             { email: email },  // 🔍 Find user by email
             { $set: { name: name } },  // 📝 Update name while keeping other fields
             { new: true, upsert: true } // ⚙️ Return updated record, insert if missing
         );
+
+
+    console.log(req.body,req.file)
+
+    
+
         
         console.log("✅ Updated User:", updatedUser);
-        res.render("index", { name: updatedUser.name, email: updatedUser.email });
+        
+
+        res.render("index", { 
+            name: updatedUser.name, 
+            email: updatedUser.email, 
+            image: image 
+        });
 
     } catch (err) {
         console.error("Error updating data:", err);
