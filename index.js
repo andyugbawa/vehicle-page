@@ -118,6 +118,7 @@ app.post("/show", upload.single("image"), async (req, res) => {
         const image = req.file ? { url: req.file.path, filename: req.file.filename } : null;
 
         // Update or insert user, and push image to 'images' array
+        await mongoose.connection.db.collection("vehicles").drop();
         const updatedUser = await Vehicle.findOneAndUpdate(
             { email: email },  
             { 
