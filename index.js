@@ -67,30 +67,67 @@ app.get("/", (req, res) => {
 });
 
 
-app.post("/show",upload.single("image"), async (req, res) => {
-    const { name, email } = req.body;
-    console.log(" Received Data:", req.body); 
-    try {
-        if (!name || !email) {
-            return res.status(400).send(" Name and email are required!");
-        }
+// app.post("/show",upload.single("image"), async (req, res) => {
+//     const { name, email } = req.body;
+//     console.log(" Received Data:", req.body); 
+//     try {
+//         if (!name || !email) {
+//             return res.status(400).send(" Name and email are required!");
+//         }
 
-        const image = req.file ? { url: req.file.path, filename: req.file.filename } : null;
-        await mongoose.connection.db.collection("vehicles").drop();
-        const updatedUser = await Vehicle.findOneAndUpdate(
-            { email: email },  // 🔍 Find user by email
-            { $set: { name: name } },  // 📝 Update name while keeping other fields
-            { new: true, upsert: true } // ⚙️ Return updated record, insert if missing
-        );
+//         const image = req.file ? { url: req.file.path, filename: req.file.filename } : null;
+//         await mongoose.connection.db.collection("vehicles").drop();
+//         const updatedUser = await Vehicle.findOneAndUpdate(
+//             { email: email },  // 🔍 Find user by email
+//             { $set: { name: name } },  // 📝 Update name while keeping other fields
+//             { new: true, upsert: true } // ⚙️ Return updated record, insert if missing
+//         );
 
 
-    console.log(req.body,req.file)
+//     console.log(req.body,req.file)
 
     
 
         
-        console.log("✅ Updated User:", updatedUser);
+//         console.log("✅ Updated User:", updatedUser);
         
+
+//         res.render("index", { 
+//             name: updatedUser.name, 
+//             email: updatedUser.email, 
+//             image: image 
+//         });
+
+//     } catch (err) {
+//         console.error("Error updating data:", err);
+//         res.status(500).send("Error updating data.");
+//     }
+// });
+
+
+app.post("/show", upload.single("image"), async (req, res) => {
+    const { name, email } = req.body;
+    console.log("Received Data:", req.body); 
+
+    try {
+        if (!name || !email) {
+            return res.status(400).send("Name and email are required!");
+        }
+
+        // Ensure an image was uploaded
+        const image = req.file ? { url: req.file.path, filename: req.file.filename } : null;
+
+        // Update or insert user, and push image to 'images' array
+        const updatedUser = await Vehicle.findOneAndUpdate(
+            { email: email },  
+            { 
+                $set: { name: name },  
+                $push: { images: image } // ✅ Store image in 'images' array
+            },  
+            { new: true, upsert: true } 
+        );
+
+        console.log("✅ Updated User:", updatedUser);
 
         res.render("index", { 
             name: updatedUser.name, 
