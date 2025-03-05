@@ -1,13 +1,14 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
+const bcrypt = require("bcrypt")
 const dotenv = require("dotenv");
 const {storage}= require("./cloudinary")
 const multer =require("multer");
 const upload= multer({storage})
 // const upload= multer({dest:"uploads/"})
 
-dotenv.config(); 
+// dotenv.config(); 
 
 const app = express();
 
@@ -56,6 +57,22 @@ const VehicleSchema = new mongoose.Schema({
 const Vehicle = mongoose.model("Vehicle", VehicleSchema);
 
 
+
+
+const userSchema = new mongoose.Schema({
+    username:{
+        type:String,
+        required:true
+    },
+    password:{
+        type:String,
+        required:true
+    }
+})
+
+const User = mongoose.model("User", userSchema);
+
+
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
@@ -67,42 +84,6 @@ app.get("/", (req, res) => {
 });
 
 
-// app.post("/show",upload.single("image"), async (req, res) => {
-//     const { name, email } = req.body;
-//     console.log(" Received Data:", req.body); 
-//     try {
-//         if (!name || !email) {
-//             return res.status(400).send(" Name and email are required!");
-//         }
-
-//         const image = req.file ? { url: req.file.path, filename: req.file.filename } : null;
-//         await mongoose.connection.db.collection("vehicles").drop();
-//         const updatedUser = await Vehicle.findOneAndUpdate(
-//             { email: email },  // 🔍 Find user by email
-//             { $set: { name: name } },  // 📝 Update name while keeping other fields
-//             { new: true, upsert: true } // ⚙️ Return updated record, insert if missing
-//         );
-
-
-//     console.log(req.body,req.file)
-
-    
-
-        
-//         console.log("✅ Updated User:", updatedUser);
-        
-
-//         res.render("index", { 
-//             name: updatedUser.name, 
-//             email: updatedUser.email, 
-//             image: image 
-//         });
-
-//     } catch (err) {
-//         console.error("Error updating data:", err);
-//         res.status(500).send("Error updating data.");
-//     }
-// });
 
 
 app.post("/show", upload.single("image"), async (req, res) => {
@@ -141,6 +122,46 @@ app.post("/show", upload.single("image"), async (req, res) => {
         res.status(500).send("Error updating data.");
     }
 });
+
+
+
+app.get("/login",(req,res)=>{
+    res.render("login")
+})
+
+app.post("/login",async(req,res)=>{
+    const {username,password}=req.body;
+    const user  = await User.findOne({username});
+
+    if(!user){
+        return res.redirect("/register")
+        
+    }
+    const validPassword = bcrypt.compare(password,user.password);
+    if(validPassword){
+       res.redirect("/")
+    }else{
+        res.redirect("/login")
+    }
+    // res.send(req.body)
+})
+
+
+
+app.get("/register",(req,res)=>{
+    res.render("register")
+})
+
+app.post("/register", async(req,res)=>{
+   const {password,username} =req.body;
+   const hash = await bcrypt.hash(password,12) ;
+   const user = new User({
+       username,
+       password:hash
+   })
+   await user.save();
+   res.redirect("/")
+})
 
 
 // **Start Server**
