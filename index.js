@@ -143,7 +143,7 @@ app.post("/login",async(req,res)=>{
     }else{
         res.redirect("/login")
     }
-    // res.send(req.body)
+    
 })
 
 
