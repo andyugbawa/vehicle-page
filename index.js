@@ -6,6 +6,8 @@ const dotenv = require("dotenv");
 const {storage}= require("./cloudinary")
 const multer =require("multer");
 const upload= multer({storage})
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
 // const upload= multer({dest:"uploads/"})
 
 // dotenv.config(); 
@@ -13,15 +15,17 @@ const upload= multer({storage})
 const app = express();
 
 
-// MongoDB Connection
 
-const MONGO_URI = process.env.VERCEL_ENV === 'production' ? process.env.MONGO_URI_PROD : process.env.MONGO_URI_PROD;
 
 // MongoDB Connection
 
-// const MONGO_URI = process.env.VERCEL_ENV === 'production' 
-//     ? process.env.MONGO_URI_PROD 
-//     : process.env.MONGO_URI_DEV;
+// const MONGO_URI = process.env.VERCEL_ENV === 'production' ? process.env.MONGO_URI_PROD : process.env.MONGO_URI_PROD;
+
+// MongoDB Connection
+
+const MONGO_URI = process.env.VERCEL_ENV === 'production' 
+    ? process.env.MONGO_URI_PROD 
+    : process.env.MONGO_URI_DEV;
 
 
 
@@ -78,9 +82,46 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // Ensure JSON data parsing
 
+app.use(
+    session({
+        secret: "yourSecretKey",  // Change this to a secure key
+        resave: false,
+        saveUninitialized: false,
+        store: MongoStore.create({ mongoUrl: MONGO_URI }), // Store sessions in MongoDB
+        cookie: { maxAge: 1000 * 60 * 60 * 24 } // 1 day expiry
+    })
+);
+
+
+
+function isAuthenticated(req, res, next) {
+    if (req.session.user) {
+        return next(); // User is authenticated
+    }
+    res.redirect("/login"); // Redirect if not logged in
+}
+app.get("/", isAuthenticated, (req, res) => {
+    res.render("index", { 
+        name: req.session.user.username, 
+        email: req.session.user.email || null, // ✅ Include email (default to null if missing)
+        image: null
+    });
+});
+
+
+
 
 app.get("/", (req, res) => {
-    res.render("index", { name: null, email: null, image: null }); // ✅ Ensure image is always defined
+    if (!req.session.user) {
+        return res.redirect("/login");
+    }
+
+    res.render("index", { 
+        name: req.session.user.username, // ✅ Show logged-in user
+        email: req.session.user.email || null,
+        image: null
+    });
+    res.render("index", { name: null, email: null, image: null });
 });
 
 
@@ -137,8 +178,9 @@ app.post("/login",async(req,res)=>{
         return res.redirect("/register")
         
     }
-    const validPassword = bcrypt.compare(password,user.password);
+    const validPassword = await bcrypt.compare(password, user.password);
     if(validPassword){
+        req.session.user = user;
        res.redirect("/")
     }else{
         res.redirect("/login")
@@ -162,6 +204,13 @@ app.post("/register", async(req,res)=>{
    await user.save();
    res.redirect("/")
 })
+
+app.get("/logout", (req, res) => {
+    req.session.destroy(() => {
+        res.redirect("/login"); // Redirect to login after logout
+    });
+});
+
 
 
 // **Start Server**

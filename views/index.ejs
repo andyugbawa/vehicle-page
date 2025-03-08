@@ -18,15 +18,22 @@
         <button type="submit">Submit</button>
         <input type="file" name="image" placeholder="select image">
     </form>
-    <% if (name && email) { %>
+    <% if (name) { %>
         <h1><%= name %></h1>
-        <p><%= email %></p>
-    
-        <% if (image) { %>  <!-- ✅ Check if image exists first -->
-            <h3>Uploaded Image:</h3>
-            <img src="<%= image.url %>" alt="Uploaded Image" width="200">
-        <% } %>
     <% } %>
+    
+    <% if (email) { %>  <!-- ✅ Only display email if it exists -->
+        <p><%= email %></p>
+    <% } %>
+    
+    <% if (image) { %>  <!-- ✅ Only show image if it exists -->
+        <h3>Uploaded Image:</h3>
+        <img src="<%= image.url %>" alt="Uploaded Image" width="200">
+    <% } %>
+    
+
+    <a href="/logout">Logout</a>
+
     
 </body>
 </html>
