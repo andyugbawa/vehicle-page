@@ -100,29 +100,44 @@ function isAuthenticated(req, res, next) {
     }
     res.redirect("/login"); // Redirect if not logged in
 }
-app.get("/", isAuthenticated, (req, res) => {
-    res.render("index", { 
-        name: req.session.user.username, 
-        email: req.session.user.email || null, // ✅ Include email (default to null if missing)
-        image: null
-    });
-});
-
-
-
-
 app.get("/", (req, res) => {
-    if (!req.session.user) {
-        return res.redirect("/login");
-    }
+   
 
     res.render("index", { 
-        name: req.session.user.username, // ✅ Show logged-in user
-        email: req.session.user.email || null,
-        image: null
+        name: req.session.user ? req.session.user.username : null,  
+        email: req.session.user ? req.session.user.email : null,  
+        image: null,  
+         
     });
-    res.render("index", { name: null, email: null, image: null });
 });
+
+
+// app.get("/", isAuthenticated,(req, res) => {
+//     const works = [{name:"james",age:10},{name:"kelvin",age:9},{name:"jude",age:8},{name:"john",age:4}];
+//     res.render("index", { 
+//         name: req.session.user.username, 
+//         email: req.session.user.email || null, // ✅ Include email (default to null if missing)
+//         image:"https://res.cloudinary.com/dltppygnn/image/upload/v1739825472/Club-Recipee/fljob4vxbdbx60ffrnfx.jpg",
+//         image:null,
+//         works:works
+//     });
+// });
+
+
+
+
+// app.get("/", (req, res) => {
+//     if (!req.session.user) {
+//         return res.redirect("/login");
+//     }
+
+//     res.render("index", { 
+//         name: req.session.user.username, // ✅ Show logged-in user
+//         email: req.session.user.email || null,
+//         image: null
+//     });
+//     res.render("index", { name: null, email: null, image: null });
+// });
 
 
 
@@ -205,11 +220,18 @@ app.post("/register", async(req,res)=>{
    res.redirect("/")
 })
 
+// app.get("/logout", (req, res) => {
+//     req.session.destroy(() => {
+//         res.redirect("/login"); // Redirect to login after logout
+//     });
+// });
+
 app.get("/logout", (req, res) => {
     req.session.destroy(() => {
-        res.redirect("/login"); // Redirect to login after logout
+        res.redirect("/"); // Redirect to home page after logout
     });
 });
+
 
 
 
