@@ -101,12 +101,18 @@ function isAuthenticated(req, res, next) {
     res.redirect("/login"); // Redirect if not logged in
 }
 app.get("/", (req, res) => {
-   
-
+    const andy = [{name:"james",age:10},{name:"kelvin",age:9},{name:"jude",age:8},{name:"john",age:4}];
+    console.log(andy[1]) 
+      console.log(andy[1].name)  
+      
     res.render("index", { 
         name: req.session.user ? req.session.user.username : null,  
         email: req.session.user ? req.session.user.email : null,  
         image: null,  
+       
+        cream:andy
+
+        
          
     });
 });
@@ -144,6 +150,7 @@ app.get("/", (req, res) => {
 
 app.post("/show", upload.single("image"), async (req, res) => {
     const { name, email } = req.body;
+    const andy = [{name:"james",age:10},{name:"kelvin",age:9},{name:"jude",age:8},{name:"john",age:4}];
     console.log("Received Data:", req.body); 
 
     try {
@@ -170,7 +177,8 @@ app.post("/show", upload.single("image"), async (req, res) => {
         res.render("index", { 
             name: updatedUser.name, 
             email: updatedUser.email, 
-            image: image 
+            image: image,
+            cream:andy
         });
 
     } catch (err) {
@@ -179,6 +187,24 @@ app.post("/show", upload.single("image"), async (req, res) => {
     }
 });
 
+
+
+
+app.get("/register",(req,res)=>{
+    res.render("register")
+})
+
+app.post("/register", async(req,res)=>{
+   const {password,username} =req.body;
+
+   const hash = await bcrypt.hash(password,12) ;
+   const user = new User({
+       username,
+       password:hash
+   })
+   await user.save();
+   res.redirect("/")
+})
 
 
 app.get("/login",(req,res)=>{
@@ -204,27 +230,6 @@ app.post("/login",async(req,res)=>{
 })
 
 
-
-app.get("/register",(req,res)=>{
-    res.render("register")
-})
-
-app.post("/register", async(req,res)=>{
-   const {password,username} =req.body;
-   const hash = await bcrypt.hash(password,12) ;
-   const user = new User({
-       username,
-       password:hash
-   })
-   await user.save();
-   res.redirect("/")
-})
-
-// app.get("/logout", (req, res) => {
-//     req.session.destroy(() => {
-//         res.redirect("/login"); // Redirect to login after logout
-//     });
-// });
 
 app.get("/logout", (req, res) => {
     req.session.destroy(() => {
